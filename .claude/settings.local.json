@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add button card dialog dropdown-menu input label separator skeleton toast badge scroll-area sheet tabs progress tooltip alert-dialog -y)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx next build:*)",
+      "Bash(gh auth status:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
