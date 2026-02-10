@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface UploadZoneProps {
   competitionId: string;
+  existingFilenames: string[];
   onUploadComplete: () => void;
 }
 
@@ -32,20 +34,38 @@ function getImageDimensions(file: File): Promise<{ width: number; height: number
   });
 }
 
-export default function UploadZone({ competitionId, onUploadComplete }: UploadZoneProps) {
+export default function UploadZone({ competitionId, existingFilenames, onUploadComplete }: UploadZoneProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploading, setUploading] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map((file) => ({
+    // Filtrer les doublons (déjà uploadés ou déjà dans la file d'attente)
+    const pendingNames = files.map((f) => f.file.name);
+    const duplicates: string[] = [];
+    const unique = acceptedFiles.filter((file) => {
+      const isDuplicate =
+        existingFilenames.includes(file.name) || pendingNames.includes(file.name);
+      if (isDuplicate) duplicates.push(file.name);
+      return !isDuplicate;
+    });
+
+    if (duplicates.length > 0) {
+      toast.warning(
+        `${duplicates.length} doublon${duplicates.length > 1 ? "s" : ""} ignoré${duplicates.length > 1 ? "s" : ""} : ${duplicates.slice(0, 3).join(", ")}${duplicates.length > 3 ? "…" : ""}`
+      );
+    }
+
+    if (unique.length === 0) return;
+
+    const newFiles = unique.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
       status: "pending" as const,
       progress: 0,
     }));
     setFiles((prev) => [...prev, ...newFiles]);
-  }, []);
+  }, [files, existingFilenames]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

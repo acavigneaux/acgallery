@@ -237,6 +237,9 @@ export default function AlbumManagementPage() {
         <CardContent>
           <UploadZone
             competitionId={competition.id}
+            existingFilenames={competition.photos.map((p) =>
+              p.filename.replace(/^[a-z0-9]+_/, "")
+            )}
             onUploadComplete={fetchCompetition}
           />
         </CardContent>
