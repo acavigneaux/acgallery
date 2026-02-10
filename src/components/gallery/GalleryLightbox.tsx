@@ -39,10 +39,6 @@ export default function GalleryLightbox({
     width: photo.width,
     height: photo.height,
     alt: photo.filename,
-    download: {
-      url: photo.originalUrl,
-      filename: photo.filename,
-    },
   }));
 
   return (
@@ -62,9 +58,8 @@ export default function GalleryLightbox({
       download={{
         download: ({ slide }) => {
           const photo = photos.find((p) => p.originalUrl === slide.src);
-          if (photo) {
-            downloadPhoto(photo.originalUrl, photo.filename);
-          }
+          const filename = photo?.filename || slide.alt || "photo.jpg";
+          downloadPhoto(slide.src, filename);
         },
       }}
       thumbnails={{
