@@ -1,34 +1,44 @@
 import { toast } from "sonner";
 
+function isMobileDevice(): boolean {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
 /**
- * Télécharge une photo via l'API proxy (évite les problèmes CORS)
- * puis utilise le Web Share API sur mobile pour "Enregistrer l'image"
- * avec fallback blob download sur desktop.
+ * Télécharge une photo :
+ * - Mobile : Web Share API → "Enregistrer l'image" dans la photothèque
+ * - Desktop : téléchargement direct du fichier
  */
 export async function downloadPhoto(url: string, filename: string) {
   const toastId = toast.loading("Préparation du téléchargement…");
 
   try {
-    // Passer par l'API proxy pour éviter les problèmes CORS
     const proxyUrl = `/api/photos/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
     const response = await fetch(proxyUrl);
     if (!response.ok) throw new Error("Erreur réseau");
     const blob = await response.blob();
 
-    // Sur mobile : Web Share API avec fichier → accès à "Enregistrer l'image"
-    const file = new File([blob], filename, { type: blob.type });
-    if (navigator.canShare?.({ files: [file] })) {
-      toast.dismiss(toastId);
-      try {
-        await navigator.share({ files: [file] });
-        return;
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === "AbortError") return;
-        // Fallback si le partage échoue
+    // Mobile uniquement : Web Share API → accès à "Enregistrer l'image"
+    if (isMobileDevice()) {
+      // Sortir du plein écran si actif (bloque le Web Share API)
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => {});
+      }
+
+      const file = new File([blob], filename, { type: blob.type });
+      if (navigator.canShare?.({ files: [file] })) {
+        toast.dismiss(toastId);
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (err: unknown) {
+          if (err instanceof Error && err.name === "AbortError") return;
+          // Fallback ci-dessous
+        }
       }
     }
 
-    // Fallback : téléchargement via blob URL
+    // Desktop ou fallback : téléchargement direct via blob URL
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = objectUrl;
