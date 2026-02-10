@@ -10,6 +10,7 @@ import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/counter.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
+import { downloadPhoto } from "@/lib/download";
 
 interface Photo {
   id: string;
@@ -57,6 +58,14 @@ export default function GalleryLightbox({
       }}
       slideshow={{
         delay: 3000,
+      }}
+      download={{
+        download: ({ slide }) => {
+          const photo = photos.find((p) => p.originalUrl === slide.src);
+          if (photo) {
+            downloadPhoto(photo.originalUrl, photo.filename);
+          }
+        },
       }}
       thumbnails={{
         position: "bottom",

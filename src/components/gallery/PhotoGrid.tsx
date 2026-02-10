@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Heart, Download } from "lucide-react";
 import { getFavorites, toggleFavorite } from "@/lib/favorites";
+import { downloadPhoto } from "@/lib/download";
 import GalleryLightbox from "./GalleryLightbox";
 
 interface Photo {
@@ -50,13 +51,7 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
 
   function handleDownload(e: React.MouseEvent, photo: Photo) {
     e.stopPropagation();
-    const link = document.createElement("a");
-    link.href = photo.originalUrl;
-    link.download = photo.filename;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadPhoto(photo.originalUrl, photo.filename);
   }
 
   return (
@@ -83,11 +78,11 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
               />
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              {/* Overlay : toujours visible sur mobile, hover sur desktop */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" />
 
-              {/* Action buttons */}
-              <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              {/* Action buttons : toujours visibles sur mobile */}
+              <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                 <button
                   onClick={(e) => handleToggleFavorite(e, photo.id)}
                   className="p-2 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors"
