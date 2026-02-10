@@ -32,7 +32,7 @@ interface Competition {
   location: string | null;
   description: string | null;
   coverPhotoId: string | null;
-  year: { id: string; year: number };
+  year: { id: string; year: number; coverPhotoId: string | null };
   photos: Array<{
     id: string;
     filename: string;
@@ -256,6 +256,8 @@ export default function AlbumManagementPage() {
             photos={competition.photos}
             coverPhotoId={competition.coverPhotoId}
             competitionId={competition.id}
+            yearId={competition.year.id}
+            yearCoverPhotoId={competition.year.coverPhotoId}
             onUpdate={fetchCompetition}
           />
         </CardContent>

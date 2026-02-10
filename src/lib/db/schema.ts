@@ -5,6 +5,7 @@ import { createId } from "@paralleldrive/cuid2";
 export const years = pgTable("years", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
   year: integer("year").notNull().unique(),
+  coverPhotoId: text("cover_photo_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

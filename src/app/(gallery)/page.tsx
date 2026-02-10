@@ -12,6 +12,7 @@ async function getYears() {
     .select({
       id: years.id,
       year: years.year,
+      coverPhotoId: years.coverPhotoId,
       competitionCount: count(competitions.id),
     })
     .from(years)
@@ -21,6 +22,19 @@ async function getYears() {
 
   const withCovers = await Promise.all(
     result.map(async (y) => {
+      // Si une vignette est choisie manuellement, l'utiliser
+      if (y.coverPhotoId) {
+        const chosen = await db
+          .select({ thumbnailUrl: photos.thumbnailUrl })
+          .from(photos)
+          .where(eq(photos.id, y.coverPhotoId))
+          .limit(1);
+        if (chosen[0]) {
+          return { ...y, coverUrl: chosen[0].thumbnailUrl };
+        }
+      }
+
+      // Fallback : 1ère photo de la 1ère compétition
       const coverPhoto = await db
         .select({ thumbnailUrl: photos.thumbnailUrl })
         .from(photos)

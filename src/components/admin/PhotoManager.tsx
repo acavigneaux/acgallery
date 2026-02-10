@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Star, StarOff, GripVertical } from "lucide-react";
+import { Trash2, Star, StarOff, GripVertical, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Photo {
@@ -31,6 +31,8 @@ interface PhotoManagerProps {
   photos: Photo[];
   coverPhotoId: string | null;
   competitionId: string;
+  yearId: string;
+  yearCoverPhotoId: string | null;
   onUpdate: () => void;
 }
 
@@ -38,6 +40,8 @@ export default function PhotoManager({
   photos,
   coverPhotoId,
   competitionId,
+  yearId,
+  yearCoverPhotoId,
   onUpdate,
 }: PhotoManagerProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -82,6 +86,21 @@ export default function PhotoManager({
       });
       if (!res.ok) throw new Error();
       toast.success("Photo de couverture mise à jour");
+      onUpdate();
+    } catch {
+      toast.error("Erreur lors de la mise à jour");
+    }
+  }
+
+  async function handleSetYearCover(photoId: string) {
+    try {
+      const res = await fetch(`/api/years/${yearId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverPhotoId: photoId }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Vignette de l'année mise à jour");
       onUpdate();
     } catch {
       toast.error("Erreur lors de la mise à jour");
@@ -149,6 +168,7 @@ export default function PhotoManager({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {photos.map((photo) => {
           const isCover = photo.id === coverPhotoId;
+          const isYearCover = photo.id === yearCoverPhotoId;
           const isSelected = selectedPhotos.has(photo.id);
 
           return (
@@ -157,9 +177,11 @@ export default function PhotoManager({
               className={`relative aspect-square rounded-lg overflow-hidden group cursor-pointer border-2 transition-colors ${
                 isSelected
                   ? "border-purple-500"
-                  : isCover
-                    ? "border-yellow-400"
-                    : "border-transparent"
+                  : isYearCover
+                    ? "border-blue-400"
+                    : isCover
+                      ? "border-yellow-400"
+                      : "border-transparent"
               }`}
               onClick={() => toggleSelect(photo.id)}
             >
@@ -171,20 +193,28 @@ export default function PhotoManager({
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
               />
 
-              {/* Cover badge */}
-              {isCover && (
-                <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400 text-yellow-900 text-xs font-medium">
-                  <Star className="h-3 w-3" />
-                  Cover
-                </div>
-              )}
+              {/* Badges */}
+              <div className="absolute top-2 left-2 flex flex-col gap-1">
+                {isCover && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400 text-yellow-900 text-xs font-medium">
+                    <Star className="h-3 w-3" />
+                    Cover
+                  </div>
+                )}
+                {isYearCover && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-medium">
+                    <ImageIcon className="h-3 w-3" />
+                    Année
+                  </div>
+                )}
+              </div>
 
-              {/* Selection indicator */}
+              {/* Selection indicator — visible sur mobile */}
               <div
                 className={`absolute top-2 right-2 h-5 w-5 rounded-full border-2 transition-colors ${
                   isSelected
                     ? "bg-purple-500 border-purple-500"
-                    : "border-white/80 opacity-0 group-hover:opacity-100"
+                    : "border-white/80 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                 }`}
               >
                 {isSelected && (
@@ -198,9 +228,18 @@ export default function PhotoManager({
                 )}
               </div>
 
-              {/* Actions overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Actions overlay — visible sur mobile */}
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-white hover:bg-white/20"
+                    onClick={() => handleSetYearCover(photo.id)}
+                    title={isYearCover ? "Vignette de l'année actuelle" : "Définir comme vignette de l'année"}
+                  >
+                    <ImageIcon className={`h-4 w-4 ${isYearCover ? "text-blue-400" : ""}`} />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

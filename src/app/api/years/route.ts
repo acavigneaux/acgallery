@@ -9,6 +9,7 @@ export async function GET() {
       .select({
         id: years.id,
         year: years.year,
+        coverPhotoId: years.coverPhotoId,
         createdAt: years.createdAt,
         competitionCount: count(competitions.id),
         photoCount: count(photos.id),
@@ -19,9 +20,21 @@ export async function GET() {
       .groupBy(years.id)
       .orderBy(desc(years.year));
 
-    // Get a cover photo for each year (first photo of first competition)
     const yearsWithCovers = await Promise.all(
       result.map(async (y) => {
+        // Si une vignette est choisie manuellement, l'utiliser
+        if (y.coverPhotoId) {
+          const chosen = await db
+            .select({ thumbnailUrl: photos.thumbnailUrl })
+            .from(photos)
+            .where(eq(photos.id, y.coverPhotoId))
+            .limit(1);
+          if (chosen[0]) {
+            return { ...y, coverUrl: chosen[0].thumbnailUrl };
+          }
+        }
+
+        // Fallback : 1ère photo de la 1ère compétition
         const coverPhoto = await db
           .select({ thumbnailUrl: photos.thumbnailUrl })
           .from(photos)
@@ -30,10 +43,7 @@ export async function GET() {
           .orderBy(competitions.order, photos.order)
           .limit(1);
 
-        return {
-          ...y,
-          coverUrl: coverPhoto[0]?.thumbnailUrl || null,
-        };
+        return { ...y, coverUrl: coverPhoto[0]?.thumbnailUrl || null };
       })
     );
 
