@@ -1,15 +1,17 @@
 import { toast } from "sonner";
 
 /**
- * Télécharge une photo en utilisant le Web Share API sur mobile
- * (permet "Enregistrer dans la photothèque" sur iOS/Android)
+ * Télécharge une photo via l'API proxy (évite les problèmes CORS)
+ * puis utilise le Web Share API sur mobile pour "Enregistrer l'image"
  * avec fallback blob download sur desktop.
  */
 export async function downloadPhoto(url: string, filename: string) {
   const toastId = toast.loading("Préparation du téléchargement…");
 
   try {
-    const response = await fetch(url);
+    // Passer par l'API proxy pour éviter les problèmes CORS
+    const proxyUrl = `/api/photos/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    const response = await fetch(proxyUrl);
     if (!response.ok) throw new Error("Erreur réseau");
     const blob = await response.blob();
 
